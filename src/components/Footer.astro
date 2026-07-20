@@ -1,0 +1,65 @@
+---
+const year = new Date().getFullYear();
+---
+
+<footer class="footer">
+	<div class="container footer__inner">
+		<span class="footer__brand">Soyer</span>
+		<nav class="footer__meta">
+			<a href="mailto:hello@soyer.tech">hello@soyer.tech</a>
+			<span class="footer__copy">© {year} Soyer. All rights reserved.</span>
+		</nav>
+	</div>
+</footer>
+
+<style>
+	.footer {
+		border-top: 1px solid var(--color-border);
+		background: var(--color-bg);
+		padding-block: 2.5rem;
+	}
+
+	.footer__inner {
+		display: flex;
+		flex-direction: column;
+		gap: 0.75rem;
+	}
+
+	.footer__brand {
+		font-weight: 800;
+		font-size: 1.25rem;
+		letter-spacing: -0.01em;
+	}
+
+	.footer__meta {
+		display: flex;
+		flex-direction: column;
+		gap: 0.5rem;
+		color: var(--color-text-muted);
+		font-size: 0.9375rem;
+	}
+
+	.footer__meta a {
+		color: var(--color-text-muted);
+		text-decoration: none;
+	}
+
+	.footer__meta a:hover {
+		color: var(--color-primary);
+		text-decoration: underline;
+	}
+
+	@media (min-width: 640px) {
+		.footer__inner {
+			flex-direction: row;
+			align-items: center;
+			justify-content: space-between;
+		}
+
+		.footer__meta {
+			flex-direction: row;
+			align-items: center;
+			gap: 1.5rem;
+		}
+	}
+</style>

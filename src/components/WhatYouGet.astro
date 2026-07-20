@@ -1,0 +1,85 @@
+---
+const values = [
+	{
+		title: "Know what's collectable now",
+		body: "See exactly which work is ready to bill today, so you can send it and get paid without second-guessing.",
+	},
+	{
+		title: "Know what to fix to collect more",
+		body: "Spot the missing photo or doc holding up a payment — and clear it before it costs you.",
+	},
+	{
+		title: "Know what you're owed",
+		body: "Keep a running, honest total of every dollar in the pipeline, all in one place.",
+	},
+];
+---
+
+<section class="get section" aria-labelledby="get-heading">
+	<div class="container">
+		<p class="eyebrow">What you get</p>
+		<h2 id="get-heading" class="get__heading">
+			Clarity on every dollar you're owed
+		</h2>
+
+		<ul class="get__grid">
+			{
+				values.map((value) => (
+					<li class="value-card">
+						<h3 class="value-card__title">{value.title}</h3>
+						<p class="value-card__body">{value.body}</p>
+					</li>
+				))
+			}
+		</ul>
+	</div>
+</section>
+
+<style>
+	.get {
+		background: var(--color-surface);
+		border-block: 1px solid var(--color-border);
+	}
+
+	.get__heading {
+		font-size: clamp(1.625rem, 4.5vw, 2.5rem);
+		font-weight: 700;
+		letter-spacing: -0.015em;
+		margin-top: 0.5rem;
+		max-width: 22ch;
+	}
+
+	.get__grid {
+		list-style: none;
+		padding: 0;
+		margin: 2.5rem 0 0;
+		display: grid;
+		gap: 1.25rem;
+		grid-template-columns: 1fr;
+	}
+
+	.value-card {
+		background: var(--color-bg);
+		border: 1px solid var(--color-border);
+		border-radius: var(--radius-lg);
+		padding: 1.75rem;
+	}
+
+	.value-card__title {
+		font-size: 1.25rem;
+		font-weight: 700;
+		line-height: 1.25;
+	}
+
+	.value-card__body {
+		margin-top: 0.5rem;
+		color: var(--color-text-muted);
+	}
+
+	@media (min-width: 720px) {
+		.get__grid {
+			grid-template-columns: repeat(3, 1fr);
+			gap: 1.5rem;
+		}
+	}
+</style>

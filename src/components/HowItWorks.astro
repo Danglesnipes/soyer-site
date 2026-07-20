@@ -1,0 +1,96 @@
+---
+const steps = [
+	{
+		n: 1,
+		title: "Capture the job",
+		body: "Snap photos and collect compliance docs from the field, right when the work happens — nothing forgotten, nothing lost.",
+	},
+	{
+		n: 2,
+		title: "Assemble the pack",
+		body: "Soyer pulls it all together into one clean package with everything the GC needs to approve your payment.",
+	},
+	{
+		n: 3,
+		title: "Submit and get paid",
+		body: "Send the pack in one move, track where it stands, and turn finished work into money in the bank.",
+	},
+];
+---
+
+<section class="how section" aria-labelledby="how-heading">
+	<div class="container">
+		<p class="eyebrow">How it works</p>
+		<h2 id="how-heading" class="how__heading">Three steps to getting paid</h2>
+
+		<ol class="how__grid">
+			{
+				steps.map((step) => (
+					<li class="step-card">
+						<span class="step-card__num" aria-hidden="true">
+							{step.n}
+						</span>
+						<h3 class="step-card__title">{step.title}</h3>
+						<p class="step-card__body">{step.body}</p>
+					</li>
+				))
+			}
+		</ol>
+	</div>
+</section>
+
+<style>
+	.how__heading {
+		font-size: clamp(1.625rem, 4.5vw, 2.5rem);
+		font-weight: 700;
+		letter-spacing: -0.015em;
+		margin-top: 0.5rem;
+	}
+
+	.how__grid {
+		list-style: none;
+		padding: 0;
+		margin: 2.5rem 0 0;
+		display: grid;
+		gap: 1.25rem;
+		grid-template-columns: 1fr;
+	}
+
+	.step-card {
+		background: var(--color-surface);
+		border: 1px solid var(--color-border);
+		border-radius: var(--radius-lg);
+		padding: 1.75rem;
+	}
+
+	.step-card__num {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		width: 2.75rem;
+		height: 2.75rem;
+		border-radius: 999px;
+		background: var(--color-primary);
+		color: var(--color-on-primary);
+		font-weight: 700;
+		font-size: 1.25rem;
+	}
+
+	.step-card__title {
+		margin-top: 1.25rem;
+		font-size: 1.3125rem;
+		font-weight: 700;
+	}
+
+	.step-card__body {
+		margin-top: 0.5rem;
+		color: var(--color-text-muted);
+	}
+
+	@media (min-width: 720px) {
+		.how__grid {
+			grid-template-columns: repeat(3, 1fr);
+			gap: 1.5rem;
+		}
+	}
+</style>

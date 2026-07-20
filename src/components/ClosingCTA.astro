@@ -1,0 +1,48 @@
+---
+const APP_URL = "https://app.soyer.tech";
+---
+
+<section class="cta section" aria-labelledby="cta-heading">
+	<div class="container cta__inner">
+		<h2 id="cta-heading" class="cta__heading">
+			Stop chasing. Start getting paid.
+		</h2>
+		<p class="cta__body">
+			Turn the work you've already done into cash. Open Soyer and send your
+			first pack today.
+		</p>
+		<a class="btn-primary" href={APP_URL}>Open Soyer</a>
+	</div>
+</section>
+
+<style>
+	.cta {
+		background: var(--color-surface);
+		border-top: 1px solid var(--color-border);
+	}
+
+	.cta__inner {
+		text-align: center;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+	}
+
+	.cta__heading {
+		font-size: clamp(1.75rem, 5vw, 2.75rem);
+		font-weight: 800;
+		letter-spacing: -0.02em;
+		max-width: 18ch;
+	}
+
+	.cta__body {
+		margin-top: 1rem;
+		font-size: clamp(1.0625rem, 2.2vw, 1.1875rem);
+		color: var(--color-text-muted);
+		max-width: 46ch;
+	}
+
+	.cta .btn-primary {
+		margin-top: 2rem;
+	}
+</style>
