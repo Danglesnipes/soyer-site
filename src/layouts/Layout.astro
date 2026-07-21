@@ -1,4 +1,6 @@
 ---
+import Header from "../components/Header.astro";
+
 interface Props {
 	title: string;
 	description: string;
@@ -26,6 +28,8 @@ const { title, description } = Astro.props;
 		<meta name="twitter:card" content="summary_large_image" />
 	</head>
 	<body>
+		<div data-header-sentinel aria-hidden="true"></div>
+		<Header />
 		<slot />
 	</body>
 </html>
@@ -57,6 +61,7 @@ const { title, description } = Astro.props;
 		/* Scale */
 		--radius: 0.5rem;
 		--radius-lg: 20px;
+		--header-h: 60px;
 		--maxw: 1080px;
 		--pad-x: clamp(1.25rem, 5vw, 2.5rem);
 		--section-y: clamp(3.5rem, 9vw, 7rem);
@@ -99,6 +104,23 @@ const { title, description } = Astro.props;
 	img {
 		max-width: 100%;
 		display: block;
+	}
+
+	/* Sentinel for the sticky-header scroll toggle — out of flow, no layout shift */
+	[data-header-sentinel] {
+		position: absolute;
+		top: 0;
+		left: 0;
+		width: 1px;
+		height: 72px;
+		pointer-events: none;
+	}
+
+	/* Keep anchor targets clear of the fixed header when jumped to */
+	#how-it-works,
+	#gcs,
+	#faq {
+		scroll-margin-top: calc(var(--header-h) + 0.75rem);
 	}
 
 	/* Shared layout helpers */

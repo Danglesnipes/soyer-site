@@ -1,0 +1,295 @@
+---
+const APP_URL = "https://app.soyer.tech";
+
+const navLinks = [
+	{ href: "#how-it-works", label: "How it works" },
+	{ href: "#gcs", label: "For your GCs" },
+	{ href: "#faq", label: "FAQ" },
+];
+---
+
+<header class="site-header" data-site-header>
+	<div class="container site-header__inner">
+		<a class="site-header__brand" href="/" aria-label="Soyer — home">Soyer</a>
+
+		<nav class="site-header__nav" aria-label="Primary">
+			{navLinks.map((link) => <a href={link.href}>{link.label}</a>)}
+		</nav>
+
+		<div class="site-header__actions">
+			<a class="site-header__login" href={APP_URL}>Log in</a>
+			<a class="btn-primary site-header__cta" href={APP_URL}>
+				Sign up — it's free
+			</a>
+		</div>
+
+		<div class="site-header__mobile">
+			<a class="btn-primary site-header__cta site-header__cta--mobile" href={APP_URL}>
+				Sign up
+			</a>
+			<button
+				type="button"
+				class="site-header__menu-btn"
+				aria-label="Open menu"
+				aria-expanded="false"
+				aria-controls="site-header-drawer"
+				data-menu-btn
+			>
+				<svg class="icon-menu" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h16M4 16h16"/></svg>
+				<svg class="icon-close" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg>
+			</button>
+		</div>
+	</div>
+
+	<div class="site-header__drawer" id="site-header-drawer" data-drawer hidden>
+		<nav class="site-header__drawer-nav" aria-label="Mobile">
+			{navLinks.map((link) => <a href={link.href} data-drawer-link>{link.label}</a>)}
+			<a href={APP_URL} class="site-header__drawer-login" data-drawer-link>Log in</a>
+		</nav>
+	</div>
+</header>
+
+<style>
+	.site-header {
+		position: fixed;
+		inset: 0 0 auto 0;
+		z-index: 100;
+		background: transparent;
+		border-bottom: 1px solid transparent;
+		transition:
+			background-color 0.2s ease,
+			border-color 0.2s ease,
+			backdrop-filter 0.2s ease;
+	}
+
+	.site-header.scrolled {
+		background: color-mix(in srgb, var(--color-bg) 88%, transparent);
+		-webkit-backdrop-filter: blur(10px);
+		backdrop-filter: blur(10px);
+		border-bottom: 0.5px solid var(--color-border);
+	}
+
+	.site-header__inner {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 1rem;
+		height: var(--header-h);
+	}
+
+	.site-header__brand {
+		font-weight: 800;
+		font-size: 1.25rem;
+		letter-spacing: -0.01em;
+		color: var(--color-text);
+		text-decoration: none;
+		white-space: nowrap;
+	}
+
+	.site-header__brand:focus-visible,
+	.site-header__nav a:focus-visible,
+	.site-header__login:focus-visible,
+	.site-header__menu-btn:focus-visible,
+	.site-header__drawer-nav a:focus-visible {
+		outline: 3px solid var(--color-primary);
+		outline-offset: 3px;
+		border-radius: var(--radius);
+	}
+
+	/* ----- Desktop nav / actions: hidden on mobile ----- */
+	.site-header__nav {
+		display: none;
+	}
+
+	.site-header__actions {
+		display: none;
+	}
+
+	.site-header__nav a,
+	.site-header__login {
+		color: var(--color-text);
+		text-decoration: none;
+		font-size: 0.9375rem;
+		font-weight: 600;
+		transition: color 0.15s ease;
+	}
+
+	.site-header__nav a:hover,
+	.site-header__login:hover {
+		color: var(--color-primary);
+	}
+
+	/* ----- Header CTA: ghost at top, solid amber when scrolled ----- */
+	.site-header__cta.btn-primary {
+		padding: 0.5rem 1rem;
+		font-size: 0.9375rem;
+		background: transparent;
+		color: var(--color-primary);
+		border: 1.5px solid var(--color-primary);
+		box-shadow: none;
+		white-space: nowrap;
+	}
+
+	.site-header.scrolled .site-header__cta.btn-primary {
+		background: var(--color-primary);
+		color: var(--color-on-primary);
+		border-color: var(--color-primary);
+	}
+
+	.site-header.scrolled .site-header__cta.btn-primary:hover {
+		background: var(--color-primary-hover);
+		border-color: var(--color-primary-hover);
+	}
+
+	/* ----- Mobile group (CTA + hamburger) ----- */
+	.site-header__mobile {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+	}
+
+	.site-header__menu-btn {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		width: 2.5rem;
+		height: 2.5rem;
+		padding: 0;
+		background: transparent;
+		border: 1px solid var(--color-border);
+		border-radius: var(--radius);
+		color: var(--color-text);
+		cursor: pointer;
+	}
+
+	.site-header__menu-btn svg {
+		width: 22px;
+		height: 22px;
+	}
+
+	.site-header__menu-btn .icon-close {
+		display: none;
+	}
+
+	.site-header.menu-open .site-header__menu-btn .icon-menu {
+		display: none;
+	}
+
+	.site-header.menu-open .site-header__menu-btn .icon-close {
+		display: inline;
+	}
+
+	/* ----- Drawer ----- */
+	.site-header__drawer {
+		background: color-mix(in srgb, var(--color-bg) 96%, transparent);
+		-webkit-backdrop-filter: blur(10px);
+		backdrop-filter: blur(10px);
+		border-bottom: 1px solid var(--color-border);
+	}
+
+	.site-header__drawer[hidden] {
+		display: none;
+	}
+
+	.site-header__drawer-nav {
+		display: flex;
+		flex-direction: column;
+		padding: 0.5rem var(--pad-x) 1rem;
+	}
+
+	.site-header__drawer-nav a {
+		color: var(--color-text);
+		text-decoration: none;
+		font-size: 1.0625rem;
+		font-weight: 600;
+		padding: 0.875rem 0.25rem;
+		border-bottom: 1px solid var(--color-border);
+	}
+
+	.site-header__drawer-nav a:last-child {
+		border-bottom: none;
+	}
+
+	.site-header__drawer-login {
+		color: var(--color-text-muted) !important;
+	}
+
+	@media (min-width: 880px) {
+		.site-header__inner {
+			display: grid;
+			grid-template-columns: 1fr auto 1fr;
+		}
+
+		.site-header__nav {
+			display: flex;
+			justify-content: center;
+			gap: 2rem;
+		}
+
+		.site-header__actions {
+			display: flex;
+			align-items: center;
+			justify-content: flex-end;
+			gap: 1.25rem;
+		}
+
+		.site-header__mobile {
+			display: none;
+		}
+
+		.site-header__drawer {
+			display: none;
+		}
+	}
+</style>
+
+<script>
+	const header = document.querySelector<HTMLElement>("[data-site-header]");
+	const sentinel = document.querySelector<HTMLElement>("[data-header-sentinel]");
+	const menuBtn = document.querySelector<HTMLButtonElement>("[data-menu-btn]");
+	const drawer = document.querySelector<HTMLElement>("[data-drawer]");
+
+	// Transparent -> solid on scroll, via a cheap sentinel observer.
+	if (header && sentinel) {
+		const io = new IntersectionObserver(
+			([entry]) => {
+				header.classList.toggle("scrolled", !entry.isIntersecting);
+			},
+			{ threshold: 0 },
+		);
+		io.observe(sentinel);
+	}
+
+	// Mobile drawer
+	if (header && menuBtn && drawer) {
+		const closeMenu = () => {
+			header.classList.remove("menu-open");
+			menuBtn.setAttribute("aria-expanded", "false");
+			menuBtn.setAttribute("aria-label", "Open menu");
+			drawer.hidden = true;
+		};
+		const openMenu = () => {
+			header.classList.add("menu-open");
+			menuBtn.setAttribute("aria-expanded", "true");
+			menuBtn.setAttribute("aria-label", "Close menu");
+			drawer.hidden = false;
+		};
+
+		menuBtn.addEventListener("click", () => {
+			if (drawer.hidden) openMenu();
+			else closeMenu();
+		});
+
+		// Tapping a link closes the drawer, then the native anchor smooth-scrolls.
+		drawer.querySelectorAll("[data-drawer-link]").forEach((link) => {
+			link.addEventListener("click", closeMenu);
+		});
+
+		document.addEventListener("keydown", (e) => {
+			if (e.key === "Escape" && !drawer.hidden) {
+				closeMenu();
+				menuBtn.focus();
+			}
+		});
+	}
+</script>
