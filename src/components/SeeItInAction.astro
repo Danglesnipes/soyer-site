@@ -1,0 +1,82 @@
+---
+// PLACEHOLDER — empty phone-screenshot slots. No real images yet.
+const slots = [1, 2, 3];
+---
+
+<section class="see section" aria-labelledby="see-heading">
+	<div class="container">
+		<p class="eyebrow">See it in action</p>
+
+		<ul class="see__grid">
+			{
+				slots.map((slot) => (
+					<li class="phone">
+						<div class="phone__frame" role="img" aria-label={`App screenshot placeholder ${slot}`}>
+							<span class="phone__label">Screenshot {slot}</span>
+						</div>
+						<p class="phone__caption is-placeholder">[Caption]</p>
+					</li>
+				))
+			}
+		</ul>
+	</div>
+</section>
+
+<style>
+	.see {
+		background: var(--color-surface);
+		border-block: 1px solid var(--color-border);
+	}
+
+	.see__grid {
+		list-style: none;
+		padding: 0;
+		margin: 2.5rem 0 0;
+		display: grid;
+		gap: 2rem;
+		grid-template-columns: 1fr;
+		justify-items: center;
+	}
+
+	.phone {
+		width: 100%;
+		max-width: 240px;
+	}
+
+	.phone__frame {
+		aspect-ratio: 9 / 19;
+		width: 100%;
+		border: 2px dashed var(--color-primary);
+		border-radius: 28px;
+		background: color-mix(in srgb, var(--color-primary) 6%, transparent);
+		display: flex;
+		align-items: center;
+		justify-content: center;
+	}
+
+	.phone__label {
+		color: var(--color-primary);
+		font-size: 0.8125rem;
+		font-weight: 600;
+		letter-spacing: 0.04em;
+		text-transform: uppercase;
+	}
+
+	.phone__caption {
+		margin-top: 1rem;
+		text-align: center;
+		color: var(--color-text-muted);
+		font-style: italic;
+		border: 1px dashed var(--color-primary);
+		border-radius: var(--radius);
+		background: color-mix(in srgb, var(--color-primary) 6%, transparent);
+		padding: 0.5rem 0.75rem;
+	}
+
+	@media (min-width: 720px) {
+		.see__grid {
+			grid-template-columns: repeat(3, 1fr);
+			gap: 1.5rem;
+		}
+	}
+</style>

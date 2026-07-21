@@ -1,0 +1,93 @@
+---
+const scenarios = [
+	{
+		title: "If your GC isn't on Soyer",
+		body: "No problem — they don't need to be. All you need is their contact info, and they'll get a link to open your pack. Everything they need to sign off on payment, no signup required.",
+	},
+	{
+		title: "If your GC is on Soyer",
+		body: "Even better. Connected GCs can set their requirements — telling you exactly what they need to approve job packs and payments — and Soyer checks against them before you send. You'll know a pack is complete the way that GC wants it, so it doesn't come back rejected.",
+	},
+];
+---
+
+<section class="gcs section" aria-labelledby="gcs-heading">
+	<div class="container">
+		<p class="eyebrow">Your GCs</p>
+		<h2 id="gcs-heading" class="gcs__heading">
+			Works with your GCs — however they work
+		</h2>
+		<p class="gcs__intro">
+			Whether or not your GC has ever heard of Soyer, you can use it to send
+			them a pack and get paid faster. Your GCs don't need to sign up or buy in
+			for you to get the benefits.
+		</p>
+
+		<ul class="gcs__grid">
+			{
+				scenarios.map((scenario) => (
+					<li class="gc-card">
+						<h3 class="gc-card__title">{scenario.title}</h3>
+						<p class="gc-card__body">{scenario.body}</p>
+					</li>
+				))
+			}
+		</ul>
+	</div>
+</section>
+
+<style>
+	.gcs {
+		background: var(--color-surface);
+		border-block: 1px solid var(--color-border);
+	}
+
+	.gcs__heading {
+		font-size: clamp(1.625rem, 4.5vw, 2.5rem);
+		font-weight: 700;
+		letter-spacing: -0.015em;
+		margin-top: 0.5rem;
+		max-width: 22ch;
+	}
+
+	.gcs__intro {
+		margin-top: 1.25rem;
+		font-size: clamp(1.0625rem, 2.2vw, 1.25rem);
+		color: var(--color-text-muted);
+		max-width: 60ch;
+	}
+
+	.gcs__grid {
+		list-style: none;
+		padding: 0;
+		margin: 2.5rem 0 0;
+		display: grid;
+		gap: 1.25rem;
+		grid-template-columns: 1fr;
+	}
+
+	.gc-card {
+		background: var(--color-bg);
+		border: 1px solid var(--color-border);
+		border-radius: var(--radius-lg);
+		padding: 1.75rem;
+	}
+
+	.gc-card__title {
+		font-size: 1.25rem;
+		font-weight: 700;
+		line-height: 1.25;
+	}
+
+	.gc-card__body {
+		margin-top: 0.5rem;
+		color: var(--color-text-muted);
+	}
+
+	@media (min-width: 720px) {
+		.gcs__grid {
+			grid-template-columns: repeat(2, 1fr);
+			gap: 1.5rem;
+		}
+	}
+</style>
