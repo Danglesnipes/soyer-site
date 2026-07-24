@@ -278,7 +278,8 @@ const pieces = [
 		border-radius: 11px;
 		box-shadow: var(--shadow);
 		transform-origin: center;
-		will-change: transform;
+		/* will-change is toggled from JS only while the loop is actively running,
+		   and removed when the section is off-screen / idle. */
 	}
 
 	.piece__row {
@@ -340,7 +341,7 @@ const pieces = [
 		box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 16%, transparent);
 		opacity: 0;
 		transform-origin: center;
-		will-change: transform, opacity;
+		/* will-change toggled from JS only while animating. */
 	}
 
 	.approval__t {
@@ -375,7 +376,7 @@ const pieces = [
 		font-weight: 700;
 		opacity: 0;
 		transform-origin: center;
-		will-change: transform, opacity;
+		/* will-change toggled from JS only while animating. */
 	}
 
 	/* rejected stamp — full-stage overlay, slams in over the pack */
@@ -446,14 +447,16 @@ const pieces = [
 		const stamp = stage.querySelector<HTMLElement>("[data-stamp]")!;
 
 		const num = (el: HTMLElement, k: string) => parseFloat(el.dataset[k] || "0");
-		const scaleOf = () => stage.clientWidth / 580;
+
+		// Scale is cached and only recomputed on resize — never read per frame,
+		// so the rAF loop never forces a synchronous layout.
+		let scale = stage.clientWidth / 580;
 
 		type Pos = { x: number; y: number; rot: number; sc: number };
 		const posOf = new WeakMap<HTMLElement, Pos>();
 
 		function apply(el: HTMLElement, p: Pos) {
-			const s = scaleOf();
-			el.style.transform = `translate(${(p.x * s).toFixed(2)}px, ${(p.y * s).toFixed(2)}px) rotate(${p.rot}deg) scale(${p.sc})`;
+			el.style.transform = `translate(${(p.x * scale).toFixed(2)}px, ${(p.y * scale).toFixed(2)}px) rotate(${p.rot}deg) scale(${p.sc})`;
 		}
 
 		function move(
@@ -472,7 +475,8 @@ const pieces = [
 
 		// Re-apply resting transforms on resize (positions scale with the stage).
 		const movers = [...pieces, approval, badge];
-		new ResizeObserver(() => {
+		const ro = new ResizeObserver(() => {
+			scale = stage.clientWidth / 580;
 			for (const el of movers) {
 				const p = posOf.get(el);
 				if (!p) continue;
@@ -482,7 +486,8 @@ const pieces = [
 				void el.offsetWidth;
 				el.style.transition = keep;
 			}
-		}).observe(stage);
+		});
+		ro.observe(stage);
 
 		function scatter(el: HTMLElement, transition: string) {
 			move(el, num(el, "sx"), num(el, "sy"), num(el, "sr"), 1, transition);
@@ -493,55 +498,12 @@ const pieces = [
 		pieces.forEach((el) => scatter(el, "none"));
 
 		// ----- Reduced motion: static scattered mess, meter 47, no loop -----
+		// (No rAF, no IntersectionObserver, no visibility hooks — zero ongoing work.)
 		if (reduce.matches) {
 			meterNum.textContent = "47";
 			phaseEl.textContent = "Weeks of work — still unpaid.";
 		} else {
-			// ----- Clock (continuous across loops; only the 180-cap resets it) -----
-			let day = 1;
-			let capped = false;
-			let curSpeed = 360;
-			let clockTimer: number | null = null;
-			let visible = false;
-			let waiters: Array<() => void> = [];
-
-			const renderDay = () => (meterNum.textContent = String(Math.round(day)));
-
-			function tick() {
-				if (capped) return;
-				day += 1;
-				if (day >= 180) {
-					day = 180;
-					capped = true;
-					meter.classList.add("is-maxed");
-				}
-				renderDay();
-			}
-
-			function startClock(ms: number) {
-				curSpeed = ms;
-				if (clockTimer !== null) clearInterval(clockTimer);
-				clockTimer = visible ? window.setInterval(tick, ms) : null;
-			}
-
-			function setVisible(v: boolean) {
-				if (v === visible) return;
-				visible = v;
-				if (v) {
-					waiters.forEach((r) => r());
-					waiters = [];
-					if (started) startClock(curSpeed);
-				} else if (clockTimer !== null) {
-					clearInterval(clockTimer);
-					clockTimer = null;
-				}
-			}
-
-			const whenVisible = () =>
-				visible ? Promise.resolve() : new Promise<void>((r) => waiters.push(r));
-			const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 			const phase = (t: string) => (phaseEl.textContent = t);
-
 			const EXPIRED = 2;
 			const slot = (el: HTMLElement) => ({
 				x: num(el, "px"),
@@ -549,23 +511,41 @@ const pieces = [
 				rot: num(el, "pr"),
 			});
 
-			function assemble(i: number) {
+			// will-change lives only while the loop is actually running.
+			function setWillChange(on: boolean) {
+				for (const el of pieces) el.style.willChange = on ? "transform" : "";
+				approval.style.willChange = on ? "transform, opacity" : "";
+				badge.style.willChange = on ? "transform, opacity" : "";
+			}
+
+			// ---- Clock state (continuous across cycles; only the 180-cap resets it) ----
+			let day = 1;
+			let capped = false;
+			let curSpeed = 360; // ms per day; the rAF loop accumulates day = dt / curSpeed
+			let lastRendered = -1;
+
+			function renderDay() {
+				const d = Math.round(day);
+				if (d !== lastRendered) {
+					lastRendered = d;
+					meterNum.textContent = String(d);
+				}
+			}
+
+			// ---- Beat actions (identical visuals to before) ----
+			function assembleDrift(i: number) {
 				const el = pieces[i];
 				el.style.zIndex = String(10 + i);
 				const s = slot(el);
 				// heavy decelerating drift toward the slot...
-				move(
-					el,
-					s.x,
-					s.y - 18,
-					s.rot * 0.6,
-					0.96,
-					"transform 1.2s cubic-bezier(.9,.03,.69,.22)",
-				);
+				move(el, s.x, s.y - 18, s.rot * 0.6, 0.96, "transform 1.2s cubic-bezier(.9,.03,.69,.22)");
+			}
+
+			function assembleSettle(i: number) {
+				const el = pieces[i];
+				const s = slot(el);
 				// ...then settle into the stacked slot.
-				window.setTimeout(() => {
-					move(el, s.x, s.y, s.rot, 0.9, "transform .75s cubic-bezier(.18,.7,.32,1)");
-				}, 1180);
+				move(el, s.x, s.y, s.rot, 0.9, "transform .75s cubic-bezier(.18,.7,.32,1)");
 			}
 
 			function liftExpired() {
@@ -576,7 +556,8 @@ const pieces = [
 				move(el, s.x, s.y - 74, 0, 1.28, "transform .6s cubic-bezier(.2,.8,.3,1.1)");
 				// badge directly above the lifted (scaled) piece
 				move(badge, s.x - 15, s.y - 114, 0, 1, "none");
-				requestAnimationFrame(() => {
+				// fade in on the next frame (drained by the main loop — no orphan rAF)
+				pendingNextFrame.push(() => {
 					badge.style.transition = "opacity .5s ease";
 					badge.style.opacity = "1";
 				});
@@ -584,7 +565,7 @@ const pieces = [
 
 			function slideApproval() {
 				approval.style.opacity = "1";
-				requestAnimationFrame(() => {
+				pendingNextFrame.push(() => {
 					move(approval, 250, 150, -3, 1, "transform .85s cubic-bezier(.2,.7,.3,1)");
 				});
 			}
@@ -600,92 +581,216 @@ const pieces = [
 				pieces[EXPIRED].classList.remove("is-expired");
 			}
 
-			let started = false;
-			let cycleN = 0;
+			// ---- Timeline model -------------------------------------------------
+			// A cycle is a list of absolute-time events {at, fn} plus a duration.
+			// The single rAF loop advances `cycleElapsed` and fires events as their
+			// time is crossed. Overlapping transitions (e.g. a piece settling while
+			// the next piece begins its drift) fall out of this naturally.
+			type Ev = { at: number; fn: () => void };
+			const NORMAL_DUR = 10020;
 
-			async function cycle(n: number) {
-				await whenVisible();
+			function buildCycle(n: number): { events: Ev[]; duration: number } {
+				const ev: Ev[] = [];
+				let off = 0;
 
-				// 180-cap gut-punch: hold red, then reset to 1 and start over.
+				// 180-cap gut-punch prepended only when we ended the last cycle maxed.
 				if (capped) {
-					phase("180 days — still nothing");
-					await sleep(1400);
-					day = 1;
-					capped = false;
-					meter.classList.remove("is-maxed");
-					renderDay();
-					phase("And you start over…");
-					await sleep(900);
+					ev.push({ at: 0, fn: () => phase("180 days — still nothing") });
+					ev.push({
+						at: 1400,
+						fn: () => {
+							day = 1;
+							capped = false;
+							meter.classList.remove("is-maxed");
+							renderDay();
+							phase("And you start over…");
+						},
+					});
+					off = 2300; // 1400 hold + 900 "start over" beat
 				}
 
-				// scatter the pieces back out (visible reset) + clear last cycle
-				resetMovers();
-				pieces.forEach((el, i) => {
-					el.style.zIndex = String(1 + i);
-					scatter(el, "transform .6s cubic-bezier(.5,.1,.4,1)");
+				const A = (t: number, fn: () => void) => ev.push({ at: off + t, fn });
+
+				// scatter back out + clear last cycle, clock back to normal speed
+				A(0, () => {
+					resetMovers();
+					pieces.forEach((el, i) => {
+						el.style.zIndex = String(1 + i);
+						scatter(el, "transform .6s cubic-bezier(.5,.1,.4,1)");
+					});
+					curSpeed = 360;
+					phase("Back to packaging it all up");
 				});
-				startClock(360);
-				phase("Back to packaging it all up");
-				await sleep(750);
 
-				// slow, halting one-at-a-time assembly
+				// slow, halting one-at-a-time assembly (drift at t, settle at t+1180)
 				for (let i = 0; i < pieces.length; i++) {
-					assemble(i);
-					await sleep(560);
+					const t = 750 + i * 560;
+					A(t, () => assembleDrift(i));
+					A(t + 1180, () => assembleSettle(i));
 				}
-				await sleep(1000); // let the last piece settle
 
 				// brief hopeful beat
-				phase("Pack complete — submitted");
-				await sleep(1000);
+				A(5670, () => phase("Pack complete — submitted"));
 
 				// rejection reason alternates per cycle
-				if (n % 2 === 0) {
-					phase("Your GC adds a requirement");
-					slideApproval();
-				} else {
-					phase("A compliance doc expired");
-					liftExpired();
-				}
-				await sleep(1350);
+				A(6670, () => {
+					if (n % 2 === 0) {
+						phase("Your GC adds a requirement");
+						slideApproval();
+					} else {
+						phase("A compliance doc expired");
+						liftExpired();
+					}
+				});
 
 				// rejected — time bleeds faster
-				phase("Rejected — and still unpaid");
-				startClock(150);
-				stamp.classList.add("is-slammed");
-				await sleep(1500);
+				A(8020, () => {
+					phase("Rejected — and still unpaid");
+					curSpeed = 150;
+					stamp.classList.add("is-slammed");
+				});
 
 				// fade everything out; expired piece returns to neutral
-				stamp.classList.remove("is-slammed");
-				approval.style.transition = "opacity .5s ease";
-				approval.style.opacity = "0";
-				badge.style.opacity = "0";
-				pieces[EXPIRED].classList.remove("is-expired");
-				await sleep(500);
-				startClock(360);
+				A(9520, () => {
+					stamp.classList.remove("is-slammed");
+					approval.style.transition = "opacity .5s ease";
+					approval.style.opacity = "0";
+					badge.style.opacity = "0";
+					pieces[EXPIRED].classList.remove("is-expired");
+				});
+
+				// back to normal clock speed at the seam
+				A(NORMAL_DUR, () => {
+					curSpeed = 360;
+				});
+
+				ev.sort((a, b) => a.at - b.at);
+				return { events: ev, duration: off + NORMAL_DUR };
 			}
 
-			async function run() {
-				if (started) return;
-				started = true;
-				renderDay();
-				startClock(360);
-				while (true) {
-					await cycle(cycleN);
-					cycleN += 1;
+			// ---- rAF driver -----------------------------------------------------
+			let rafId: number | null = null;
+			let running = false;
+			let started = false;
+			let lastTs: number | null = null;
+			let cycleN = 0;
+			let cycleElapsed = 0;
+			let eventIdx = 0;
+			let curEvents: Ev[] = [];
+			let curDuration = 0;
+			let pendingNextFrame: Array<() => void> = [];
+
+			function startCycle(n: number) {
+				const built = buildCycle(n);
+				curEvents = built.events;
+				curDuration = built.duration;
+				cycleElapsed = 0;
+				eventIdx = 0;
+			}
+
+			function frame(ts: number) {
+				rafId = requestAnimationFrame(frame);
+
+				// first frame after a (re)start establishes the baseline — dt 0, so
+				// no skipped-time is fast-forwarded through.
+				if (lastTs === null) {
+					lastTs = ts;
+					return;
 				}
+				const dt = ts - lastTs;
+				lastTs = ts;
+
+				// run anything queued for "next frame" by the previous frame's events
+				if (pendingNextFrame.length) {
+					const q = pendingNextFrame;
+					pendingNextFrame = [];
+					for (const fn of q) fn();
+				}
+
+				// clock: derived purely from elapsed time (no setInterval)
+				if (!capped) {
+					day += dt / curSpeed;
+					if (day >= 180) {
+						day = 180;
+						capped = true;
+						meter.classList.add("is-maxed");
+					}
+					renderDay();
+				}
+
+				// advance the cycle timeline and fire due events
+				cycleElapsed += dt;
+				while (eventIdx < curEvents.length && curEvents[eventIdx].at <= cycleElapsed) {
+					curEvents[eventIdx].fn();
+					eventIdx++;
+				}
+				if (cycleElapsed >= curDuration) {
+					cycleN += 1;
+					startCycle(cycleN);
+				}
+			}
+
+			function startLoop() {
+				if (running) return;
+				running = true;
+				setWillChange(true);
+				if (!started) {
+					started = true;
+					day = 1;
+					curSpeed = 360;
+					renderDay();
+					cycleN = 0;
+					startCycle(0);
+				}
+				lastTs = null; // resume without fast-forwarding skipped time
+				rafId = requestAnimationFrame(frame);
+			}
+
+			function stopLoop() {
+				if (!running) return;
+				running = false;
+				if (rafId !== null) {
+					cancelAnimationFrame(rafId);
+					rafId = null;
+				}
+				lastTs = null;
+				pendingNextFrame = [];
+				setWillChange(false); // drop will-change while idle
+			}
+
+			// ---- Visibility gating: viewport AND tab must both be visible --------
+			let onScreen = false;
+			let docVisible = !document.hidden;
+
+			function updateRunning() {
+				if (onScreen && docVisible) startLoop();
+				else stopLoop();
 			}
 
 			const io = new IntersectionObserver(
 				(entries) => {
-					for (const e of entries) {
-						setVisible(e.isIntersecting && e.intersectionRatio > 0);
-						if (e.isIntersecting && e.intersectionRatio >= 0.4) run();
-					}
+					for (const e of entries) onScreen = e.isIntersecting;
+					updateRunning();
 				},
-				{ threshold: [0, 0.4, 0.75] },
+				{ threshold: 0.2 },
 			);
 			io.observe(stage);
+
+			const onVis = () => {
+				docVisible = !document.hidden;
+				updateRunning();
+			};
+			document.addEventListener("visibilitychange", onVis);
+
+			// ---- Teardown: no leaked handles on unload / navigation -------------
+			const cleanup = () => {
+				stopLoop();
+				io.disconnect();
+				ro.disconnect();
+				document.removeEventListener("visibilitychange", onVis);
+				window.removeEventListener("pagehide", cleanup);
+			};
+			window.addEventListener("pagehide", cleanup);
 		}
 	}
 </script>
